@@ -178,7 +178,7 @@ const captureWebsite = async (input, options) => {
 		launchOptions.slowMo = 100;
 	}
 
-	const browser = options._browser || await puppeteer.launch(launchOptions);
+	const browser = await puppeteer.connect({browserWSEndpoint: `wss://chrome.browserless.io/`});
 	const page = await browser.newPage();
 
 	if (options.preloadFunction) {
