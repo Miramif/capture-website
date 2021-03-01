@@ -5,6 +5,7 @@ const fs = require('fs');
 const fileUrl = require('file-url');
 const puppeteer = require('puppeteer');
 const toughCookie = require('tough-cookie');
+const config = require('../../config')
 
 const writeFile = promisify(fs.writeFile);
 
@@ -123,6 +124,7 @@ const parseCookie = (url, cookie) => {
 const imagesHaveLoaded = () => [...document.images].map(element => element.complete);
 
 const captureWebsite = async (input, options) => {
+	console.log(`START : ${config.urlBiocenturyApi}` );
 	options = {
 		inputType: 'url',
 		width: 1280,
@@ -177,10 +179,14 @@ const captureWebsite = async (input, options) => {
 		launchOptions.headless = false;
 		launchOptions.slowMo = 100;
 	}
-
-	const browser = await puppeteer.connect({browserWSEndpoint: `wss://chrome.browserless.io/`});
+	console.time('Headless')
+	console.log(config.apiKey)
+	
+	
+	const browser = await puppeteer.connect({browserWSEndpoint: `wss://chrome.browserless.io?token=${config.apiKey}`});	
+	//const browser = await puppeteer.connect({browserWSEndpoint: `wss://chrome.browserless.io`});
 	const page = await browser.newPage();
-
+	try {
 	if (options.preloadFunction) {
 		await page.evaluateOnNewDocument(options.preloadFunction);
 	}
@@ -395,14 +401,18 @@ const captureWebsite = async (input, options) => {
 		screenshotOptions.clip = {x, y, width, height};
 	}
 
-	const buffer = await page.screenshot(screenshotOptions);
+	var buffer = await page.screenshot(screenshotOptions);
 
 	await page.close();
 
 	if (!options._keepAlive) {
 		await browser.close();
 	}
-
+} catch (err) {
+	console.log("Error in process of headless browser");
+	await browser.close();
+}
+	console.timeEnd('Headless')
 	return buffer;
 };
 
